@@ -10,6 +10,10 @@ public class ConnectState extends GameStateImpl {
     public static int DIMEN_Y;
     private byte[][] board = null;      //maximizing is "O"
 
+    static {
+        setHFunction(new MyHeuristic());
+    }
+
     public ConnectState(int dimenX, int dimenY) {
         this.DIMEN_X = dimenX;
         this.DIMEN_Y = dimenY;
@@ -20,7 +24,7 @@ public class ConnectState extends GameStateImpl {
                 board[i][j] = 0;
         }
 
-        setMaximizingTurnNow(true);
+        setMaximizingTurnNow(false);
     }
 
     public ConnectState(ConnectState parent) {
@@ -29,6 +33,7 @@ public class ConnectState extends GameStateImpl {
             for (int j = 0; j < DIMEN_Y; j++)
                 board[i][j] = parent.getBoard()[i][j];
         }
+        setMaximizingTurnNow(parent.isMaximizingTurnNow());
     }
 
     public int makeMove(byte pos) {
@@ -50,23 +55,108 @@ public class ConnectState extends GameStateImpl {
         else tmpArr[height] = 1;
 
         setMaximizingTurnNow(!maximizingTurnNow);
+        //refresh();
         return 1;
+    }
+
+    public List<Byte> getPossibleMoves(){
+        List<Byte> result = new ArrayList<>();
+        for(byte i=1;i<=DIMEN_X;i++){
+            if(board[i][DIMEN_Y-1]==0)
+                result.add(i);
+        }
+        return result;
     }
 
     @Override
     public List<GameState> generateChildren() {
-        List<ConnectState> children = new ArrayList<>();
+        List<GameState> children = new ArrayList<>();
         for (byte i = 1; i <= DIMEN_X; i++) {
             ConnectState child = new ConnectState(this);
-            if (makeMove(i) != -1){
+            if (child.makeMove(i) != -1){
                 child.setMoveName(Byte.toString(i));
                 children.add(child);}
         }
-        return null;
+        return children;
     }
 
     public byte[][] getBoard() {
         return board;
+    }
+
+    public boolean isTerminal(){
+        //gdy dochodzi do konca planszy
+        for(int i=0;i<DIMEN_X;i++){
+            if(board[i][DIMEN_Y-1]!=0)
+                return true;
+        }
+
+        //gdy jest 4 w linii
+        for(int i=0;i<DIMEN_X;i++){
+            for(int j=0;j<DIMEN_Y;j++){
+                if(board[i][j]!=0){
+                    boolean result = (checkRight(i, j) ||
+                    checkUp(i, j) ||
+                    checkUpRight(i, j) ||
+                    checkUpLeft(i, j));
+                    if(result)
+                        return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    private boolean checkUpLeft(int i, int j) {
+        if(j>DIMEN_Y-4 || i<3)
+            return false;
+        else{
+            byte tmp=board[i][j];
+            for(int k=1;k<=3;k++){
+                if(board[i-k][j+k]!=tmp)
+                    return false;
+            }
+            return true;
+        }
+    }
+
+    private boolean checkUpRight(int i, int j) {
+        if(j>DIMEN_Y-4 || i>DIMEN_X-4)
+            return false;
+        else{
+            byte tmp=board[i][j];
+            for(int k=1;k<=3;k++){
+                if(board[i+k][j+k]!=tmp)
+                    return false;
+            }
+            return true;
+        }
+    }
+
+    private boolean checkUp(int i, int j) {
+        if(j>DIMEN_Y-4)
+            return false;
+        else{
+            byte tmp=board[i][j];
+            for(int k=1;k<=3;k++){
+                if(board[i][j+k]!=tmp)
+                    return false;
+            }
+            return true;
+        }
+    }
+
+    private boolean checkRight(int i, int j) {
+        if(i>DIMEN_X-4)
+            return false;
+        else{
+            byte tmp=board[i][j];
+            for(int k=1;k<=3;k++){
+                if(board[i+k][j]!=tmp)
+                    return false;
+            }
+            return true;
+        }
     }
 
     @Override
