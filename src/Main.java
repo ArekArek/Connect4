@@ -43,7 +43,9 @@ public class Main {
                 System.out.println(connectState.toString());
             }
             if(connectState.isTerminal()){
-                System.out.println("END OF GAME: O WIN");
+                if(connectState.isMaximizingTurnNow())
+                    System.out.println("END OF GAME: X WIN");
+                else System.out.println("END OF GAME: O WIN");
                 return;
             }
 
